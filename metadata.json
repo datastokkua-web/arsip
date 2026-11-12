@@ -1,0 +1,6 @@
+{
+  "name": "Sistem Informasi Tata Persuratan Digital",
+  "description": "Sistem manajemen surat masuk, surat keluar, arsip digital, dan ekspor excel terintegrasi Google Spreadsheet & Drive",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

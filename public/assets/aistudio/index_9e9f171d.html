@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistem Informasi Tata Persuratan Digital - Manajemen Surat Masuk & Surat Keluar terintegrasi Google Spreadsheet dan Google Drive">
+  <title>SISTEM INFORMASI TATA PERSURATAN DIGITAL</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2316A34A'/%3E%3Cstop offset='1' stop-color='%232563EB'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Cpath d='M14 24h36v22a3 3 0 0 1-3 3H17a3 3 0 0 1-3-3V24z' fill='%23ffffff' opacity='.95'/%3E%3Cpath d='M14 22l18 13 18-13' fill='none' stroke='%232563EB' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome 6 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Style utama -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Dekorasi latar belakang -->
+  <span class="bg-blob blob-green"></span>
+  <span class="bg-blob blob-blue"></span>
+  <span class="bg-blob blob-yellow"></span>
+
+  <div class="app-wrapper">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="brand-logo"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <div class="brand-text">
+          <strong>TATA PERSURATAN</strong>
+          <small>Digital Office System</small>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <div class="nav-caption">Menu Utama</div>
+        <a href="#" class="active" data-page="dashboard"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+
+        <div class="nav-caption">Manajemen Surat</div>
+        <a href="#" data-page="surat-masuk"><i class="fa-solid fa-inbox"></i><span>Surat Masuk</span></a>
+        <a href="#" data-page="input-masuk"><i class="fa-solid fa-file-circle-plus"></i><span>Input Surat Masuk</span></a>
+        <a href="#" data-page="surat-keluar"><i class="fa-solid fa-paper-plane"></i><span>Surat Keluar</span></a>
+        <a href="#" data-page="input-keluar"><i class="fa-solid fa-file-exported"></i><span>Input Surat Keluar</span></a>
+
+        <div class="nav-caption">Lainnya</div>
+        <a href="#" data-page="arsip"><i class="fa-solid fa-box-archive"></i><span>Arsip Digital</span></a>
+        <a href="#" data-page="pengaturan"><i class="fa-solid fa-gear"></i><span>Pengaturan</span></a>
+      </nav>
+
+      <div class="side-foot">
+        <div class="side-foot-badge"><span class="conn-dot"></span> Google Spreadsheet</div>
+        <small>v1.3.0 &middot; 2026</small>
+      </div>
+    </aside>
+    <div id="sidebarBackdrop"></div>
+
+    <!-- ================= KONTEN UTAMA ================= -->
+    <div class="main-content">
+
+      <header class="topbar">
+        <button id="btnSidebarToggle" class="icon-btn" type="button" aria-label="Buka menu"><i class="fa-solid fa-bars"></i></button>
+        <div class="topbar-title">
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageSubtitle">Ringkasan data persuratan secara real-time</p>
+        </div>
+        <div class="topbar-actions">
+          <span id="connBadge" class="conn-badge unknown"><span class="conn-dot"></span><span id="connText">Memeriksa&hellip;</span></span>
+          <button id="btnRefreshTop" class="icon-btn" type="button" title="Muat ulang data halaman ini"><i class="fa-solid fa-rotate-right"></i></button>
+        </div>
+      </header>
+
+      <div class="content-area">
+
+        <!-- ============ HALAMAN: DASHBOARD ============ -->
+        <section id="page-dashboard" class="page-section">
+          <div id="connNotice" class="glass-card conn-notice d-none">
+            <div class="conn-notice-icon"><i class="fa-solid fa-plug-circle-exclamation"></i></div>
+            <div class="flex-grow-1">
+              <strong>Website belum terhubung ke Google Apps Script.</strong>
+              <p class="mb-0 small">Konfigurasikan URL Web App pada halaman Pengaturan agar Dashboard, Surat, dan Arsip Digital dapat mengambil data langsung dari Google Spreadsheet Anda.</p>
+            </div>
+            <button class="btn btn-brand blue btn-sm px-3" id="btnGoSettings" type="button"><i class="fa-solid fa-gear me-1"></i> Ke Pengaturan</button>
+          </div>
+
+          <div class="row g-3 g-xl-4">
+            <div class="col-xl-3 col-md-6">
+              <div class="glass-card stat-card">
+                <div class="stat-icon green"><i class="fa-solid fa-inbox"></i></div>
+                <div>
+                  <div class="stat-value" id="statTotalMasuk">0</div>
+                  <div class="stat-label">Total Surat Masuk</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="glass-card stat-card">
+                <div class="stat-icon blue"><i class="fa-solid fa-paper-plane"></i></div>
+                <div>
+                  <div class="stat-value" id="statTotalKeluar">0</div>
+                  <div class="stat-label">Total Surat Keluar</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="glass-card stat-card">
+                <div class="stat-icon yellow"><i class="fa-solid fa-calendar-days"></i></div>
+                <div>
+                  <div class="stat-value" id="statBulanIni">0</div>
+                  <div class="stat-label">Surat Bulan Ini</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="glass-card stat-card">
+                <div class="stat-icon slate"><i class="fa-solid fa-box-archive"></i></div>
+                <div>
+                  <div class="stat-value" id="statTotalArsip">0</div>
+                  <div class="stat-label">Total Arsip Digital</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 g-xl-4 mt-0 mt-xxl-1">
+            <div class="col-lg-8">
+              <div class="glass-card p-4 h-100">
+                <div class="card-head">
+                  <h5><i class="fa-solid fa-chart-column me-2 green-ic"></i>Grafik Surat per Bulan</h5>
+                  <span class="small text-muted">6 bulan terakhir</span>
+                </div>
+                <div class="chart-box"><canvas id="chartBar"></canvas></div>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="glass-card p-4 h-100">
+                <div class="card-head">
+                  <h5><i class="fa-solid fa-chart-pie me-2 blue-ic"></i>Komposisi Arsip</h5>
+                </div>
+                <div class="chart-box donut"><canvas id="chartDonut"></canvas></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 g-xl-4 mt-0 mt-xxl-1">
+            <div class="col-lg-6">
+              <div class="glass-card p-4 h-100">
+                <div class="card-head">
+                  <h5><i class="fa-solid fa-inbox me-2 green-ic"></i>Surat Masuk Terbaru</h5>
+                  <a href="#" class="small link-more" data-page="surat-masuk">Lihat semua</a>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle mb-0 mini-table">
+                    <thead><tr><th>Nomor Surat</th><th>Tanggal</th><th>Pengirim</th><th>Perihal</th><th class="text-center" style="width:70px">PDF</th></tr></thead>
+                    <tbody id="dashMasukBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="glass-card p-4 h-100">
+                <div class="card-head">
+                  <h5><i class="fa-solid fa-paper-plane me-2 blue-ic"></i>Surat Keluar Terbaru</h5>
+                  <a href="#" class="small link-more" data-page="surat-keluar">Lihat semua</a>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle mb-0 mini-table">
+                    <thead><tr><th>Nomor Surat</th><th>Tanggal</th><th>Tujuan</th><th>Perihal</th><th class="text-center" style="width:70px">PDF</th></tr></thead>
+                    <tbody id="dashKeluarBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 g-xl-4 mt-0 mt-xxl-1">
+            <div class="col-12">
+              <div class="glass-card p-4">
+                <div class="card-head">
+                  <h5><i class="fa-solid fa-clock-rotate-left me-2 yellow-ic"></i>Aktivitas Terbaru</h5>
+                  <span class="small text-muted">Diperbarui: <span id="dashUpdated">-</span></span>
+                </div>
+                <ul id="activityList" class="activity-list"></ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ HALAMAN: DAFTAR SURAT MASUK ============ -->
+        <section id="page-surat-masuk" class="page-section d-none">
+          <div class="glass-card p-4">
+            <div class="card-head mb-3">
+              <h5><i class="fa-solid fa-inbox me-2 green-ic"></i>Daftar Surat Masuk</h5>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-soft btn-sm" id="btnRefreshMasuk" type="button"><i class="fa-solid fa-rotate-right me-1"></i>Muat Ulang</button>
+                <button class="btn btn-brand green btn-sm px-3" type="button" data-page="input-masuk"><i class="fa-solid fa-plus me-1"></i>Input Surat</button>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-5">
+                <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="searchMasuk" class="form-control" placeholder="Cari nomor surat, pengirim, atau perihal&hellip;"></div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <div class="table-responsive">
+                <table class="table align-middle mb-0 data-table">
+                  <thead><tr><th style="width:52px">No</th><th>Nomor Surat</th><th>Tanggal Surat</th><th>Pengirim</th><th>Perihal</th><th class="text-center" style="width:168px">Aksi</th></tr></thead>
+                  <tbody id="tableMasukBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="table-foot">
+              <span class="small text-muted" id="countMasuk">Menampilkan 0 data</span>
+              <ul class="pagination pagination-sm mb-0" id="paginationMasuk"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ HALAMAN: INPUT SURAT MASUK ============ -->
+        <section id="page-input-masuk" class="page-section d-none">
+          <div id="masukEditBanner" class="glass-card edit-banner d-none">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <div class="flex-grow-1"><strong>Mode Edit</strong> &mdash; Mengubah data surat dengan ID: <code id="masukEditId">-</code></div>
+            <button class="btn btn-outline-soft btn-sm" id="btnCancelEditMasuk" type="button">Batal Edit</button>
+          </div>
+
+          <div class="row g-3 g-xl-4">
+            <div class="col-lg-8">
+              <div class="glass-card p-4">
+                <h5 class="form-title"><i class="fa-solid fa-file-circle-plus me-2 green-ic"></i>Form Input Surat Masuk</h5>
+                <form id="formMasuk" novalidate autocomplete="off">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label req" for="masukTanggal">Tanggal Surat</label>
+                      <input type="date" class="form-control" id="masukTanggal">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label req" for="masukNomor">Nomor Surat</label>
+                      <input type="text" class="form-control" id="masukNomor" placeholder="cth: 001/SM/PSD/2026">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label req" for="masukPengirim">Pengirim</label>
+                      <input type="text" class="form-control" id="masukPengirim" placeholder="cth: Dinas Pendidikan Provinsi">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label req" for="masukPerihal">Perihal</label>
+                      <input type="text" class="form-control" id="masukPerihal" placeholder="cth: Undangan Rapat Koordinasi">
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">File PDF Surat <span class="optional-tag">Opsional</span></label>
+                      <div class="dropzone" id="masukDropzone">
+                        <input type="file" id="masukFile" accept="application/pdf,.pdf" hidden>
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <div class="dz-main">Klik untuk memilih file PDF <span class="dz-or">atau seret file ke sini</span></div>
+                        <div class="dz-sub">Format PDF &middot; Maksimal 5 MB &middot; Opsional: boleh ditambahkan kemudian lewat tombol Edit</div>
+                      </div>
+                      <div id="masukFileMeta" class="file-chip d-none">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <div class="flex-grow-1 min-w-0">
+                          <div class="fc-name text-truncate" id="masukFileName">-</div>
+                          <div class="fc-size" id="masukFileSize">-</div>
+                        </div>
+                        <button class="fc-remove" id="btnRemoveFileMasuk" type="button" title="Ganti / hapus file"><i class="fa-solid fa-xmark"></i></button>
+                      </div>
+                      <div id="masukProgressWrap" class="d-none mt-2">
+                        <div class="d-flex justify-content-between small mb-1">
+                          <span id="masukProgressText">Mengunggah&hellip;</span>
+                          <span id="masukProgressPct">0%</span>
+                        </div>
+                        <div class="progress"><div id="masukProgressBar" class="progress-bar" style="width:0%"></div></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button type="submit" class="btn btn-brand green" id="btnSimpanMasuk"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Data</button>
+                    <button type="button" class="btn btn-brand yellow" id="btnResetMasuk"><i class="fa-solid fa-eraser me-2"></i>Reset</button>
+                    <button type="button" class="btn btn-outline-soft" id="btnBatalMasuk"><i class="fa-solid fa-xmark me-2"></i>Batal</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="glass-card p-4 mb-3 mb-xl-4">
+                <h6 class="card-subtitle"><i class="fa-solid fa-folder-tree me-2 green-ic"></i>Tujuan Penyimpanan</h6>
+                <div class="store-info">
+                  <div class="store-row"><span class="store-label">Spreadsheet</span><code>Sheet1</code></div>
+                  <div class="store-row"><span class="store-label">Folder PDF</span><code>Surat Masuk (Drive)</code></div>
+                  <div class="store-row"><span class="store-label">Folder ID</span><code class="id-trunc" id="infoFolderMasuk">1hqVP3XPvjtME72rFWkT5PhZf2pJq3Uvf</code></div>
+                </div>
+                <p class="small text-muted mb-0 mt-2"><i class="fa-solid fa-circle-info me-1"></i>Saat data disimpan, satu baris baru ditambahkan ke Sheet1 dan file PDF langsung diunggah ke folder Drive surat masuk.</p>
+              </div>
+              <div class="glass-card p-4">
+                <h6 class="card-subtitle"><i class="fa-solid fa-list-check me-2 green-ic"></i>Panduan Cepat</h6>
+                <ol class="quick-guide">
+                  <li>Isi tanggal surat (default hari ini), nomor surat, pengirim, dan perihal.</li>
+                  <li>Pilih file PDF <b>(opsional)</b>, maksimal 5 MB &mdash; boleh dilewati dan ditambahkan lewat <b>Edit</b> nanti.</li>
+                  <li>Klik <b>Simpan Data</b> &mdash; data masuk ke Sheet1 &amp; PDF (jika ada) masuk ke Drive. Gagal jaringan? Sistem mengulang otomatis dan menampilkan diagnosa.</li>
+                  <li>Gunakan <b>Reset</b> untuk mengosongkan form, <b>Batal</b> untuk kembali ke daftar.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ HALAMAN: DAFTAR SURAT KELUAR ============ -->
+        <section id="page-surat-keluar" class="page-section d-none">
+          <div class="glass-card p-4">
+            <div class="card-head mb-3">
+              <h5><i class="fa-solid fa-paper-plane me-2 blue-ic"></i>Daftar Surat Keluar</h5>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-soft btn-sm" id="btnRefreshKeluar" type="button"><i class="fa-solid fa-rotate-right me-1"></i>Muat Ulang</button>
+                <button class="btn btn-brand blue btn-sm px-3" type="button" data-page="input-keluar"><i class="fa-solid fa-plus me-1"></i>Input Surat</button>
+              </div>
+            </div>
+            <div class="row g-2 mb-3">
+              <div class="col-md-5">
+                <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="searchKeluar" class="form-control" placeholder="Cari nomor surat, tujuan, atau perihal&hellip;"></div>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <div class="table-responsive">
+                <table class="table align-middle mb-0 data-table">
+                  <thead><tr><th style="width:52px">No</th><th>Nomor Surat</th><th>Tanggal Surat</th><th>Tujuan</th><th>Perihal</th><th class="text-center" style="width:168px">Aksi</th></tr></thead>
+                  <tbody id="tableKeluarBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="table-foot">
+              <span class="small text-muted" id="countKeluar">Menampilkan 0 data</span>
+              <ul class="pagination pagination-sm mb-0" id="paginationKeluar"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ HALAMAN: INPUT SURAT KELUAR ============ -->
+        <section id="page-input-keluar" class="page-section d-none">
+          <div id="keluarEditBanner" class="glass-card edit-banner d-none">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <div class="flex-grow-1"><strong>Mode Edit</strong> &mdash; Mengubah data surat dengan ID: <code id="keluarEditId">-</code></div>
+            <button class="btn btn-outline-soft btn-sm" id="btnCancelEditKeluar" type="button">Batal Edit</button>
+          </div>
+
+          <div class="row g-3 g-xl-4">
+            <div class="col-lg-8">
+              <div class="glass-card p-4">
+                <h5 class="form-title"><i class="fa-solid fa-file-exported me-2 blue-ic"></i>Form Input Surat Keluar</h5>
+                <form id="formKeluar" novalidate autocomplete="off">
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label req" for="keluarTanggal">Tanggal Surat</label>
+                      <input type="date" class="form-control" id="keluarTanggal">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label req" for="keluarNomor">Nomor Surat</label>
+                      <input type="text" class="form-control" id="keluarNomor" placeholder="cth: 045/SK/PSD/2026">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label req" for="keluarPengirim">Pengirim</label>
+                      <input type="text" class="form-control" id="keluarPengirim" placeholder="Nama pengirim / unit penghasil surat">
+                      <div class="form-hint"><i class="fa-solid fa-circle-info me-1"></i>Sesuai spesifikasi: nilai field ini disimpan pada kolom <b>Tujuan</b> (kolom 5 Sheet2).</div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label req" for="keluarPerihal">Perihal</label>
+                      <input type="text" class="form-control" id="keluarPerihal" placeholder="cth: Pemberitahuan Jadwal Kegiatan">
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">File PDF Surat <span class="optional-tag">Opsional</span></label>
+                      <div class="dropzone" id="keluarDropzone">
+                        <input type="file" id="keluarFile" accept="application/pdf,.pdf" hidden>
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <div class="dz-main">Klik untuk memilih file PDF <span class="dz-or">atau seret file ke sini</span></div>
+                        <div class="dz-sub">Format PDF &middot; Maksimal 5 MB &middot; Opsional: boleh ditambahkan kemudian lewat tombol Edit</div>
+                      </div>
+                      <div id="keluarFileMeta" class="file-chip d-none">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        <div class="flex-grow-1 min-w-0">
+                          <div class="fc-name text-truncate" id="keluarFileName">-</div>
+                          <div class="fc-size" id="keluarFileSize">-</div>
+                        </div>
+                        <button class="fc-remove" id="btnRemoveFileKeluar" type="button" title="Ganti / hapus file"><i class="fa-solid fa-xmark"></i></button>
+                      </div>
+                      <div id="keluarProgressWrap" class="d-none mt-2">
+                        <div class="d-flex justify-content-between small mb-1">
+                          <span id="keluarProgressText">Mengunggah&hellip;</span>
+                          <span id="keluarProgressPct">0%</span>
+                        </div>
+                        <div class="progress"><div id="keluarProgressBar" class="progress-bar" style="width:0%"></div></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button type="submit" class="btn btn-brand blue" id="btnSimpanKeluar"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan Data</button>
+                    <button type="button" class="btn btn-brand yellow" id="btnResetKeluar"><i class="fa-solid fa-eraser me-2"></i>Reset</button>
+                    <button type="button" class="btn btn-outline-soft" id="btnBatalKeluar"><i class="fa-solid fa-xmark me-2"></i>Batal</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+            <div class="col-lg-4">
+              <div class="glass-card p-4 mb-3 mb-xl-4">
+                <h6 class="card-subtitle"><i class="fa-solid fa-folder-tree me-2 blue-ic"></i>Tujuan Penyimpanan</h6>
+                <div class="store-info">
+                  <div class="store-row"><span class="store-label">Spreadsheet</span><code>Sheet2</code></div>
+                  <div class="store-row"><span class="store-label">Folder PDF</span><code>Surat Keluar (Drive)</code></div>
+                  <div class="store-row"><span class="store-label">Folder ID</span><code class="id-trunc" id="infoFolderKeluar">1_tqYSmLsF_v7yWfQqVWk7WJgE5IfTB3E</code></div>
+                </div>
+                <p class="small text-muted mb-0 mt-2"><i class="fa-solid fa-circle-info me-1"></i>Saat data disimpan, satu baris baru ditambahkan ke Sheet2 dan file PDF langsung diunggah ke folder Drive surat keluar. PDF surat keluar tidak akan pernah masuk ke folder surat masuk.</p>
+              </div>
+              <div class="glass-card p-4">
+                <h6 class="card-subtitle"><i class="fa-solid fa-list-check me-2 blue-ic"></i>Panduan Cepat</h6>
+                <ol class="quick-guide">
+                  <li>Isi tanggal surat (default hari ini), nomor surat, pengirim, dan perihal.</li>
+                  <li>Pilih file PDF <b>(opsional)</b>, maksimal 5 MB &mdash; boleh dilewati dan ditambahkan lewat <b>Edit</b> nanti.</li>
+                  <li>Klik <b>Simpan Data</b> &mdash; data masuk ke Sheet2 &amp; PDF (jika ada) masuk ke Drive. Gagal jaringan? Sistem mengulang otomatis dan menampilkan diagnosa.</li>
+                  <li>Gunakan <b>Reset</b> untuk mengosongkan form, <b>Batal</b> untuk kembali ke daftar.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ HALAMAN: ARSIP DIGITAL ============ -->
+        <section id="page-arsip" class="page-section d-none">
+          <div class="glass-card p-4">
+            <div class="card-head mb-3">
+              <h5><i class="fa-solid fa-box-archive me-2 yellow-ic"></i>Arsip Digital</h5>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="small text-muted d-none d-md-inline">Pencarian, filter tanggal, pengurutan, paginasi</span>
+                <button class="btn btn-brand green btn-sm px-3" id="btnEksporArsip" type="button" title="Unduh seluruh hasil filter tab aktif sebagai file Excel (.xlsx)"><i class="fa-solid fa-file-excel me-1"></i>Ekspor Excel</button>
+              </div>
+            </div>
+
+            <ul class="nav nav-pills arsip-tabs mb-3" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="tabArsipMasuk" data-bs-toggle="pill" data-bs-target="#paneArsipMasuk" type="button" role="tab">
+                  <i class="fa-solid fa-inbox me-2"></i>Surat Masuk <span class="tab-badge" id="tabCountMasuk">0</span>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tabArsipKeluar" data-bs-toggle="pill" data-bs-target="#paneArsipKeluar" type="button" role="tab">
+                  <i class="fa-solid fa-paper-plane me-2"></i>Surat Keluar <span class="tab-badge" id="tabCountKeluar">0</span>
+                </button>
+              </li>
+            </ul>
+
+            <div class="tab-content">
+              <!-- Pane Arsip Masuk -->
+              <div class="tab-pane fade show active" id="paneArsipMasuk" role="tabpanel">
+                <div class="row g-2 align-items-end mb-3 filter-bar">
+                  <div class="col-md-4 col-lg-3">
+                    <label class="filter-label">Pencarian</label>
+                    <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="arsipMasukSearch" class="form-control" placeholder="Nomor / pengirim / perihal"></div>
+                  </div>
+                  <div class="col-6 col-md-2 col-lg-2">
+                    <label class="filter-label">Dari Tanggal</label>
+                    <input type="date" id="arsipMasukDari" class="form-control">
+                  </div>
+                  <div class="col-6 col-md-2 col-lg-2">
+                    <label class="filter-label">Sampai Tanggal</label>
+                    <input type="date" id="arsipMasukSampai" class="form-control">
+                  </div>
+                  <div class="col-md-3 col-lg-3">
+                    <label class="filter-label">Urutkan</label>
+                    <select id="arsipMasukSort" class="form-select">
+                      <option value="tanggal-desc">Tanggal Terbaru</option>
+                      <option value="tanggal-asc">Tanggal Terlama</option>
+                      <option value="nomor-asc">Nomor Surat A&rarr;Z</option>
+                      <option value="nomor-desc">Nomor Surat Z&rarr;A</option>
+                    </select>
+                  </div>
+                  <div class="col-md-1 col-lg-2">
+                    <button class="btn btn-outline-soft w-100" id="btnResetFilterMasuk" type="button"><i class="fa-solid fa-filter-circle-xmark me-1"></i>Reset</button>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0 data-table">
+                      <thead><tr><th style="width:52px">No</th><th>Nomor Surat</th><th>Tanggal Surat</th><th>Pengirim</th><th>Perihal</th><th class="text-center" style="width:168px">Aksi</th></tr></thead>
+                      <tbody id="tableArsipMasukBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="table-foot">
+                  <span class="small text-muted" id="countArsipMasuk">Menampilkan 0 data</span>
+                  <ul class="pagination pagination-sm mb-0" id="paginationArsipMasuk"></ul>
+                </div>
+              </div>
+
+              <!-- Pane Arsip Keluar -->
+              <div class="tab-pane fade" id="paneArsipKeluar" role="tabpanel">
+                <div class="row g-2 align-items-end mb-3 filter-bar">
+                  <div class="col-md-4 col-lg-3">
+                    <label class="filter-label">Pencarian</label>
+                    <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" id="arsipKeluarSearch" class="form-control" placeholder="Nomor / tujuan / perihal"></div>
+                  </div>
+                  <div class="col-6 col-md-2 col-lg-2">
+                    <label class="filter-label">Dari Tanggal</label>
+                    <input type="date" id="arsipKeluarDari" class="form-control">
+                  </div>
+                  <div class="col-6 col-md-2 col-lg-2">
+                    <label class="filter-label">Sampai Tanggal</label>
+                    <input type="date" id="arsipKeluarSampai" class="form-control">
+                  </div>
+                  <div class="col-md-3 col-lg-3">
+                    <label class="filter-label">Urutkan</label>
+                    <select id="arsipKeluarSort" class="form-select">
+                      <option value="tanggal-desc">Tanggal Terbaru</option>
+                      <option value="tanggal-asc">Tanggal Terlama</option>
+                      <option value="nomor-asc">Nomor Surat A&rarr;Z</option>
+                      <option value="nomor-desc">Nomor Surat Z&rarr;A</option>
+                    </select>
+                  </div>
+                  <div class="col-md-1 col-lg-2">
+                    <button class="btn btn-outline-soft w-100" id="btnResetFilterKeluar" type="button"><i class="fa-solid fa-filter-circle-xmark me-1"></i>Reset</button>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <div class="table-responsive">
+                    <table class="table align-middle mb-0 data-table">
+                      <thead><tr><th style="width:52px">No</th><th>Nomor Surat</th><th>Tanggal Surat</th><th>Tujuan</th><th>Perihal</th><th class="text-center" style="width:168px">Aksi</th></tr></thead>
+                      <tbody id="tableArsipKeluarBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="table-foot">
+                  <span class="small text-muted" id="countArsipKeluar">Menampilkan 0 data</span>
+                  <ul class="pagination pagination-sm mb-0" id="paginationArsipKeluar"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ HALAMAN: PENGATURAN ============ -->
+        <section id="page-pengaturan" class="page-section d-none">
+          <div class="row g-3 g-xl-4">
+            <div class="col-lg-7">
+              <div class="glass-card p-4 h-100">
+                <h5 class="form-title"><i class="fa-solid fa-satellite-dish me-2 green-ic"></i>Status Koneksi Integrasi</h5>
+                <div class="status-row">
+                  <span class="status-dot" id="dotSpreadsheet"></span>
+                  <div class="flex-grow-1 min-w-0">
+                    <div class="fw-semibold">Google Spreadsheet (Database)</div>
+                    <div class="small text-muted" id="msgSpreadsheet">Belum diperiksa</div>
+                  </div>
+                  <span class="status-pill" id="statusSpreadsheet">-</span>
+                </div>
+                <div class="status-row">
+                  <span class="status-dot" id="dotFolderMasuk"></span>
+                  <div class="flex-grow-1 min-w-0">
+                    <div class="fw-semibold">Folder Drive Surat Masuk</div>
+                    <div class="small text-muted" id="msgFolderMasuk">Belum diperiksa</div>
+                  </div>
+                  <span class="status-pill" id="statusFolderMasuk">-</span>
+                </div>
+                <div class="status-row">
+                  <span class="status-dot" id="dotFolderKeluar"></span>
+                  <div class="flex-grow-1 min-w-0">
+                    <div class="fw-semibold">Folder Drive Surat Keluar</div>
+                    <div class="small text-muted" id="msgFolderKeluar">Belum diperiksa</div>
+                  </div>
+                  <span class="status-pill" id="statusFolderKeluar">-</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mt-3 flex-wrap">
+                  <button class="btn btn-brand green px-3" id="btnTesKoneksi" type="button"><i class="fa-solid fa-satellite-dish me-2"></i>Tes Koneksi</button>
+                  <span class="small text-muted">Terakhir diperiksa: <span id="lastTestTime">-</span></span>
+                </div>
+                <div id="testDetail" class="test-detail d-none"></div>
+              </div>
+            </div>
+
+            <div class="col-lg-5">
+              <div class="glass-card p-4 h-100">
+                <h5 class="form-title"><i class="fa-solid fa-link me-2 blue-ic"></i>URL Web App Apps Script</h5>
+                <label class="form-label" for="urlWebApp">Tempel URL Web App (berakhiran <code>/exec</code>)</label>
+                <input type="url" class="form-control" id="urlWebApp" placeholder="https://script.google.com/macros/s/XXXX/exec">
+                <p class="small text-muted mt-2 mb-3"><i class="fa-solid fa-circle-info me-1"></i>URL diperoleh setelah men-deploy <code>Code.gs</code> sebagai Web App (lihat PANDUAN-DEPLOY.md, langkah 4). URL disimpan di browser Anda, tidak ada token/password di dalam kode. Bila muncul <i>"Koneksi ke Web App gagal"</i>, gunakan kartu <b>Diagnostik Koneksi</b> di bawah.</p>
+                <div class="d-flex gap-2 flex-wrap">
+                  <button class="btn btn-brand blue px-3" id="btnSimpanUrl" type="button"><i class="fa-solid fa-floppy-disk me-2"></i>Simpan URL</button>
+                  <button class="btn btn-outline-soft" id="btnHapusUrl" type="button"><i class="fa-solid fa-trash me-2"></i>Hapus</button>
+                </div>
+
+                <div class="url-permanen mt-3">
+                  <div class="up-head"><i class="fa-solid fa-lock me-2"></i>Jadikan URL Permanen &mdash; otomatis di semua browser &amp; perangkat</div>
+                  <p class="small text-muted mb-2">URL dari tombol <b>Simpan URL</b> hanya berlaku di browser ini (localStorage). Agar tidak perlu mengatur ulang saat <b>ganti browser atau ganti perangkat</b>, tanam URL ke dalam file <code>script.js</code> &mdash; URL akan menyertai file website di hosting dan otomatis dipakai semua pengunjung:</p>
+                  <ol class="up-steps">
+                    <li>Isi URL di atas, klik <b>Simpan URL</b>, dan pastikan <b>Uji Koneksi</b> hijau.</li>
+                    <li>Klik <b>Salin Kode Permanen</b> di bawah.</li>
+                    <li>Buka <code>script.js</code> &rarr; temukan baris <code>WEB_APP_URL: '',</code> di bagian atas (CONFIG) &rarr; tempel kode yang disalin menggantikan baris itu.</li>
+                    <li>Simpan, lalu unggah ulang <code>script.js</code> ke hosting (GitHub Pages/Netlify) atau perbarui folder lokal.</li>
+                    <li>Selesai &mdash; semua browser &amp; perangkat otomatis terhubung, tanpa membuka Pengaturan.</li>
+                  </ol>
+                  <div class="d-flex align-items-center gap-2 flex-wrap mt-2">
+                    <button class="btn btn-brand blue" id="btnKodePermanen" type="button"><i class="fa-solid fa-copy me-2"></i>Salin Kode Permanen</button>
+                    <span class="up-info" id="sumberUrlInfo">Sumber URL: belum diperiksa</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="glass-card p-4">
+                <h5 class="form-title"><i class="fa-solid fa-stethoscope me-2 yellow-ic"></i>Diagnostik Koneksi &amp; Konfigurasi Deploy</h5>
+                <div class="row g-2 align-items-center">
+                  <div class="col-lg-8">
+                    <p class="small text-muted mb-0">Menjalankan 4 pemeriksaan berurutan: <b>(1) Internet</b> &rarr; <b>(2) Format URL</b> &rarr; <b>(3) Jalur GET</b> (baca data) &rarr; <b>(4) Jalur POST</b> (simpan/unggah). Jalankan kartu ini setiap kali muncul <i>"Koneksi ke Web App gagal"</i> saat menyimpan &mdash; aplikasi menunjukkan titik gagalnya beserta langkah perbaikan konfigurasi deploy.</p>
+                  </div>
+                  <div class="col-lg-4 text-lg-end">
+                    <button class="btn btn-brand yellow px-3" id="btnDiagnostik" type="button"><i class="fa-solid fa-stethoscope me-2"></i>Jalankan Diagnostik</button>
+                  </div>
+                </div>
+                <div id="diagDetail" class="d-none mt-3"></div>
+              </div>
+            </div>
+
+            <div class="col-lg-7">
+              <div class="glass-card p-4 h-100">
+                <h5 class="form-title"><i class="fa-solid fa-database me-2 yellow-ic"></i>ID Integrasi Google</h5>
+                <div class="id-card">
+                  <div class="id-card-row">
+                    <div class="flex-grow-1 min-w-0">
+                      <div class="small text-muted">Spreadsheet ID</div>
+                      <code class="id-value" id="idSpreadsheet">1uxoNjks8gHgGuNatak9JFbdlLqfj3t3Fy_KFHZ0VNms</code>
+                    </div>
+                    <button class="btn-act blue" data-copy="1uxoNjks8gHgGuNatak9JFbdlLqfj3t3Fy_KFHZ0VNms" type="button" title="Salin"><i class="fa-solid fa-copy"></i></button>
+                    <a class="btn-act green" id="linkSpreadsheet" href="https://docs.google.com/spreadsheets/d/1uxoNjks8gHgGuNatak9JFbdlLqfj3t3Fy_KFHZ0VNms/edit" target="_blank" rel="noopener" title="Buka Spreadsheet"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                  </div>
+                  <div class="id-card-row">
+                    <div class="flex-grow-1 min-w-0">
+                      <div class="small text-muted">Folder Drive Surat Masuk</div>
+                      <code class="id-value" id="idFolderMasuk">1hqVP3XPvjtME72rFWkT5PhZf2pJq3Uvf</code>
+                    </div>
+                    <button class="btn-act blue" data-copy="1hqVP3XPvjtME72rFWkT5PhZf2pJq3Uvf" type="button" title="Salin"><i class="fa-solid fa-copy"></i></button>
+                    <a class="btn-act green" id="linkFolderMasuk" href="https://drive.google.com/drive/folders/1hqVP3XPvjtME72rFWkT5PhZf2pJq3Uvf" target="_blank" rel="noopener" title="Buka Folder"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                  </div>
+                  <div class="id-card-row">
+                    <div class="flex-grow-1 min-w-0">
+                      <div class="small text-muted">Folder Drive Surat Keluar</div>
+                      <code class="id-value" id="idFolderKeluar">1_tqYSmLsF_v7yWfQqVWk7WJgE5IfTB3E</code>
+                    </div>
+                    <button class="btn-act blue" data-copy="1_tqYSmLsF_v7yWfQqVWk7WJgE5IfTB3E" type="button" title="Salin"><i class="fa-solid fa-copy"></i></button>
+                    <a class="btn-act green" id="linkFolderKeluar" href="https://drive.google.com/drive/folders/1_tqYSmLsF_v7yWfQqVWk7WJgE5IfTB3E" target="_blank" rel="noopener" title="Buka Folder"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-5">
+              <div class="glass-card p-4 h-100">
+                <h5 class="form-title"><i class="fa-solid fa-circle-info me-2 green-ic"></i>Tentang Aplikasi</h5>
+                <div class="about-app">
+                  <div class="about-row"><span>Nama Aplikasi</span><b>Sistem Informasi Tata Persuratan Digital</b></div>
+                  <div class="about-row"><span>Versi</span><span class="badge version-badge" id="aboutVersion">v1.3.0</span></div>
+                  <div class="about-row"><span>Database</span><b>Google Spreadsheet</b></div>
+                  <div class="about-row"><span>Penyimpanan PDF</span><b>Google Drive</b></div>
+                  <div class="about-row"><span>Backend</span><b>Google Apps Script (Web App)</b></div>
+                  <div class="about-row"><span>Keamanan</span><b>Tanpa PHP/MySQL &middot; tanpa token di frontend</b></div>
+                </div>
+                <p class="small text-muted mb-0 mt-3"><i class="fa-solid fa-shield-halved me-1"></i>Seluruh data ditulis langsung ke Spreadsheet milik Anda melalui Apps Script yang berjalan dengan akun Google Anda.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div><!-- /content-area -->
+
+      <footer class="app-footer">
+        <span>SISTEM INFORMASI TATA PERSURATAN DIGITAL &middot; v1.3.0</span>
+        <span class="d-none d-md-inline">&mdash; Data tersimpan di Google Spreadsheet &amp; Google Drive</span>
+      </footer>
+    </div><!-- /main-content -->
+  </div><!-- /app-wrapper -->
+
+  <!-- Loader global -->
+  <div id="globalLoader"><div class="spinner-ring"></div></div>
+
+  <!-- Script pihak ketiga -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <!-- ExcelJS & SheetJS: membuat file Excel .xlsx asli di browser (fitur Ekspor Excel Arsip Digital) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <!-- Script aplikasi -->
+  <script src="script.js"></script>
+</body>
+</html>
